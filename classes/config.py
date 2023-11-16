@@ -18,6 +18,10 @@ class Config:
 
     def create_config(self):
         """Creates a config file with default values"""
+        config_file_split = self.config_file.split("/")
+        if len(config_file_split) > 1 and os.path.exists(config_file_split[0]) is False:
+            os.mkdir(config_file_split[0])
+
         config = {
             "subreddits": [],
         }

@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import *
 
 from classes.config import Config
+from classes.reddit import Reddit
 from windows.ConfigWindow import ConfigWindow
 from windows.PostWindow import PostWindow
 
@@ -133,8 +134,8 @@ class MainWindow:
         results = []
         for subreddit in self.config.get_subreddits():
             # window.add_log(f"Posting to {subreddit}")
-            # result = Reddit().post_to_reddit(self.config, subreddit, self.title_input.get(), self.body_input.get("1.0", END))
-            result = "Posting to reddit is currently disabled"
+            result = Reddit().post_to_reddit(self.config, subreddit, self.title_input.get(), self.body_input.get("1.0", END))
+            # result = "Posting to reddit is currently disabled"
             results.append(result)
             window.add_log(result)
         self.write_to_log(results)

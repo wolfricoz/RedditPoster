@@ -2,6 +2,8 @@ import random
 import socket
 import sys
 import webbrowser
+
+import prawcore.exceptions
 from praw.exceptions import PRAWException
 import praw
 
@@ -68,6 +70,8 @@ class Reddit:
             print(e)
             config.remove_subreddit(subreddit)
             return f"Failed to post to {subreddit} because of {str(e).split(':')[0]}, Removing subreddit from config"
+        except prawcore.exceptions.RequestException:
+            return "Connection Error, check your internet connection"
 
 
 def receive_connection():
