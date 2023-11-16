@@ -8,6 +8,7 @@ from classes.config import Config
 from classes.reddit import Reddit
 from windows.ConfigWindow import ConfigWindow
 from windows.PostWindow import PostWindow
+from windows.RedditWindow import RedditWindow
 
 
 # https://www.geeksforgeeks.org/right-click-menu-using-tkinter/
@@ -81,7 +82,7 @@ class MainWindow:
 
         self.save_post()
         self.listen_for_result()
-        self.reddit_list.bind("<Double-Button-1>", lambda x: print("test"))
+        self.reddit_list.bind("<Double-Button-1>", lambda x: RedditWindow(self.config, self.reddit_list.get(self.reddit_list.curselection())))
 
 
     def save_post(self):

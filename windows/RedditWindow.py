@@ -1,7 +1,9 @@
 import tkinter as tk
+from classes.config import Config
 
-class RedditWindow:
-    def __init__(self, appconfig: classes.config.Config, subreddit, *args, **kwargs):
+
+class RedditWindow(tk.Toplevel):
+    def __init__(self, appconfig: Config, subreddit, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.appconfig = appconfig
         self.name = subreddit
@@ -18,4 +20,4 @@ class RedditWindow:
 
         self.flair_text = tk.Label(self, text=f"Flair text:")
         self.flair_text.grid(row=1, column=0, sticky="nsew")
-
+        self.flair_text_input = tk.OptionMenu(self, tk.StringVar(), *["test", "test2"])
