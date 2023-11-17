@@ -22,6 +22,7 @@ class MainWindow:
     def __init__(self, master: tk.Tk):
         # Load the config and set variabes
         self.config = Config("config/config.json")
+        self.config.update_config()
         self.subreddits = self.config.get_subreddits()
         # Settings of the main window
         self.master = master
@@ -70,7 +71,6 @@ class MainWindow:
         columns = 6
         for i in range(rows):
             if i in [0, 4]:
-                print(i)
                 self.frame.grid_rowconfigure(i, weight=0)
                 continue
             self.frame.grid_rowconfigure(i, weight=1)
@@ -82,7 +82,8 @@ class MainWindow:
 
         self.save_post()
         self.listen_for_result()
-        self.reddit_list.bind("<Double-Button-1>", lambda x: RedditWindow(self.config, self.reddit_list.get(self.reddit_list.curselection())))
+        self.reddit_list.bind("<Double-Button-1>", lambda x: RedditWindow(self.config, self.reddit_list.get(self.reddit_list.curselection()), self.reddit_list))
+        self.reddit_entry.bind("<Return>", lambda x: self.on_add_button_click())
 
 
     def save_post(self):

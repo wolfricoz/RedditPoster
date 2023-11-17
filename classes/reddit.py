@@ -12,10 +12,10 @@ class Reddit:
     def __init__(self):
         self.reddit: praw.reddit
 
-    def get_refresh_token(self):
+    def get_refresh_token(self, config):
 
-        client_id = self.config.get_key("client_id")
-        client_secret = self.config.get_key("client_secret")
+        client_id = config.get_key("client_id")
+        client_secret = config.get_key("client_secret")
         commaScopes = "all"
 
         if commaScopes.lower() == "all":
@@ -51,28 +51,49 @@ class Reddit:
             return 1
 
         refresh_token = reddit.auth.authorize(params["code"])
-        send_message(client, f"Refresh token: {refresh_token}, you can close this page now.")
+        send_message(client, f"Refresh token: {refresh_token}. You should NEVER share this code with anyone.\n\nyou can close this page now.")
         return refresh_token
 
-    def post_to_reddit(self, config, subreddit, title, body):
-        """Posts to reddit"""
+    def authorize(self, config):
         reddit = praw.Reddit(client_id=config.get_key("client_id"),
                              client_secret=config.get_key("client_secret"),
                              user_agent=config.get_key("user_agent"),
                              redirect_uri=config.get_key("redirect_uri"),
                              refresh_token=config.get_key("refresh_token"))
+        return reddit
+
+    def post_to_reddit(self, config, subreddit, title, body):
+        """Posts to reddit"""
+        reddit = self.authorize(config)
 
         reddit.validate_on_submit = True
+        subredditinfo = config["subreddits"][subreddit]
         try:
-            reddit.subreddit(subreddit).submit(title, selftext=body)
+            reddit.subreddit(subreddit).submit(title, selftext=body, flair_id=subredditinfo["flair_id"], nsfw=subredditinfo["nsfw"])
             return f"Successfully posted to {subreddit}"
         except PRAWException as e:
             print(e)
-            config.remove_subreddit(subreddit)
-            return f"Failed to post to {subreddit} because of {str(e).split(':')[0]}, Removing subreddit from config"
+            if config.get_key("auto_remove") is True:
+                config.remove_subreddit(subreddit)
+            return f"Failed to post to {subreddit} because of {str(e).split(':')[0]}, {'Removing subreddit from config' if config.get_key('auto_remove') is True else ''}"
         except prawcore.exceptions.RequestException:
             return "Connection Error, check your internet connection"
 
+    def get_flairs(self, config, subreddit):
+        """Gets flairs from subreddit"""
+        try:
+            flair_dict = {}
+            reddit = self.authorize(config)
+            flairs = list(reddit.subreddit(subreddit).flair.link_templates.user_selectable())
+            for flair in flairs:
+                flair_dict[flair['flair_text']] = flair['flair_template_id']
+            if len(flair_dict) == 0:
+                return ["No flairs found"]
+            return flair_dict
+        except prawcore.exceptions.RequestException:
+            return ["Please connect to your account first"]
+        except prawcore.exceptions.NotFound:
+            return ["Subreddit not found"]
 
 def receive_connection():
     """Wait for and then return a connected socket..

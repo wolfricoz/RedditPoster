@@ -42,10 +42,21 @@ class ConfigWindow(tk.Toplevel):
         self.refresh_token_input = tk.Label(self, text=self.get_refresh_token_status())
         self.refresh_token_input.grid(row=3, column=1)
 
+
+        self.auto_remove = tk.Label(self, text="Auto remove on fail?")
+        self.auto_remove.grid(row=4, column=0)
+        self.auto_remove_toggle = tk.Checkbutton(
+                self,
+                text="Auto remove on fail?",
+                command=self.checkbox_auto_remove
+        )
+        self.auto_remove_toggle.grid(row=4, column=1)
+
         self.save_button = tk.Button(self, text="Save & Close", command=self.on_save_button_click)
-        self.save_button.grid(row=4, column=1)
+        self.save_button.grid(row=5, column=1)
         self.connect_button = tk.Button(self, text="Connect", command=self.on_connect_button_click)
-        self.connect_button.grid(row=4, column=0)
+        self.connect_button.grid(row=5, column=0)
+
 
     def on_save_button_click(self):
         """Saves the config"""
@@ -69,9 +80,13 @@ class ConfigWindow(tk.Toplevel):
         self.appconfig.save_string("client_id", self.client_id_input.get())
         self.appconfig.save_string("client_secret", self.client_secret_input.get())
         self.appconfig.save_string("user_agent", self.user_agent_input.get())
-        token = Reddit().get_refresh_token()
+        token = Reddit().get_refresh_token(self.appconfig)
         self.appconfig.save_string("refresh_token", token)
         self.refresh_token_input['text'] = self.get_refresh_token_status()
+
+
+    def checkbox_auto_remove(self):
+        self.appconfig.toggle("auto_remove")
 
     def get_refresh_token_status(self):
         self.fr = self.appconfig.get_key("refresh_token")
