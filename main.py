@@ -2,6 +2,7 @@ import os.path
 import queue
 import time
 import tkinter as tk
+import webbrowser
 from tkinter import *
 
 from classes.config import Config
@@ -45,6 +46,7 @@ class MainWindow:
 
         self.post_button = tk.Button(self.frame, text="Post", command=self.on_post_button_click)
         self.config_button = tk.Button(self.frame, text="Config", command=self.on_config_button_click)
+        self.help_button = tk.Button(self.frame, text="Help", command=lambda: webbrowser.open("https://google.com"))
 
         # Place the widgets
         self.reddit_entry.grid(row=0, column=0, padx=(10, 0), pady=10, sticky='nsew')
@@ -55,6 +57,7 @@ class MainWindow:
         self.title_input.grid(row=0, column=2, columnspan=3, padx=(10, 0), pady=10, sticky='nsew')
         self.body_input.grid(row=1, column=2, rowspan=3, columnspan=3, padx=(10, 0), sticky='nsew')
         self.scrollbar.grid(row=1, column=5, rowspan=3, sticky='nsew')
+        self.help_button.grid(row=4, column=2, padx=10, pady=(5, 10), sticky='nsew')
         self.config_button.grid(row=4, column=3, padx=10, pady=(5, 10), sticky='nsew')
         self.post_button.grid(row=4, column=4, padx=10, pady=(5, 10), sticky='nsew')
         self.frame.pack(fill=BOTH, expand=True)
