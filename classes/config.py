@@ -39,7 +39,8 @@ class Config:
             "user_agent"   : self.config.get("user_agent", ""),
             "redirect_uri" : self.config.get("redirect_uri", "http://localhost:8080"),
             "refresh_token": self.config.get("refresh_token", ""),
-            "auto_remove"  : self.config.get("auto_remove", False)
+            "auto_remove"  : self.config.get("auto_remove", False),
+            "interval"     : self.config.get("interval", 0),
         }
         with open(self.config_file, 'w') as f:
             json.dump(self.config, f, indent=2)
@@ -101,6 +102,10 @@ class Config:
         subreddits: list = list(self.config.get("subreddits", {}))
         subreddits.sort()
         return subreddits
+
+    def set_int(self, key, value: int):
+        self.config[key] = int(value)
+        self.update_config()
 
     def get_config(self):
         """Returns the config"""

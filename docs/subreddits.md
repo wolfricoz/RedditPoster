@@ -1,3 +1,8 @@
+---
+layout: default
+title: Add Subreddit
+nav_order: 3
+---
 <h1 style="text-align:center">How to add a subreddit</h1>
 
 * Enter the Subreddit Name:

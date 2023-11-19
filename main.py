@@ -1,5 +1,7 @@
+import asyncio
 import os.path
 import queue
+import threading
 import time
 import tkinter as tk
 import webbrowser
@@ -46,7 +48,7 @@ class MainWindow:
 
         self.post_button = tk.Button(self.frame, text="Post", command=self.on_post_button_click)
         self.config_button = tk.Button(self.frame, text="Config", command=self.on_config_button_click)
-        self.help_button = tk.Button(self.frame, text="Help", command=lambda: webbrowser.open("https://google.com"))
+        self.help_button = tk.Button(self.frame, text="Help", command=lambda: webbrowser.open("https://wolfricoz.github.io/redditposterdocs/"))
 
         # Place the widgets
         self.reddit_entry.grid(row=0, column=0, padx=(10, 0), pady=10, sticky='nsew')
@@ -89,6 +91,7 @@ class MainWindow:
         self.reddit_entry.bind("<Return>", lambda x: self.on_add_button_click())
 
 
+
     def save_post(self):
         """Saves the post to a file"""
         self.config.save_string("title", self.title_input.get())
@@ -122,35 +125,50 @@ class MainWindow:
         """Opens the config window"""
         self.open_config_window = ConfigWindow(self.config)
 
-    def write_to_log(self, results):
+    def write_to_log(self, result):
         option = 'a'
         if os.path.exists("logs/post.txt") is False:
             option = 'w'
             if os.path.exists("logs") is False:
                 os.mkdir("logs")
         with open("logs/post.txt", option) as f:
-            f.write(f"Reddit post run: {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write("\n".join(results))
-            f.write("\n\n")
+            f.write(f"\n{time.strftime('%Y-%m-%d %H:%M:%S')}: {result}")
 
     def on_post_button_click(self):
         """Posts to reddit"""
-        window = PostWindow(self.config)
-        results = []
-        for subreddit in self.config.get_subreddits():
-            # window.add_log(f"Posting to {subreddit}")
-            result = Reddit().post_to_reddit(self.config, subreddit, self.title_input.get(), self.body_input.get("1.0", END))
-            # result = "Posting to reddit is currently disabled"
-            results.append(result)
-            window.add_log(result)
-        self.write_to_log(results)
-        window.show_close_button()
+        self.window = PostWindow(self.config)
+        self.window.show_cancel_button()
+        threading.Thread(target=self.create_queue).start()
+
+        self.window.show_close_button()
         self.update_list()
+    def create_queue(self):
+        for subreddit in self.config.get_subreddits():
+            time.sleep(self.config.get_key("interval"))
+            # window.add_log(f"Posting to {subreddit}")
+            # wait = 6000
+            # self.master.after(wait, self.create_post(subreddit, window))
+            self.thread_queue.put(threading.Thread(target=self.create_post, args=(subreddit, self.window)).start())
+
+    def create_post(self, subreddit, window: PostWindow):
+        try:
+            if not self.window.winfo_exists():
+                print("cancelling")
+                return
+        except:
+            self.write_to_log(f"Post to {subreddit} cancelled")
+            return
+        result, refresh = Reddit().post_to_reddit(self.config, subreddit, self.title_input.get(), self.body_input.get("1.0", END))
+        if refresh:
+            self.update_list()
+        self.write_to_log(result)
+        self.window.add_log(result)
+        return result
 
     def listen_for_result(self):
         """ Check if there is something in the queue. """
         try:
-            self.thread_queue.get(0)
+            self.thread_queue.get(timeout=0)
             self.master.after(100, self.listen_for_result)
         except queue.Empty:
             self.master.after(10000, self.listen_for_result)

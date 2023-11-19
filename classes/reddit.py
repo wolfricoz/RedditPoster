@@ -67,17 +67,16 @@ class Reddit:
         reddit = self.authorize(config)
 
         reddit.validate_on_submit = True
-        subredditinfo = config["subreddits"][subreddit]
+        subredditinfo = config.config["subreddits"][subreddit]
         try:
             reddit.subreddit(subreddit).submit(title, selftext=body, flair_id=subredditinfo["flair_id"], nsfw=subredditinfo["nsfw"])
-            return f"Successfully posted to {subreddit}"
+            return f"Successfully posted to {subreddit}", False
         except PRAWException as e:
-            print(e)
             if config.get_key("auto_remove") is True:
                 config.remove_subreddit(subreddit)
-            return f"Failed to post to {subreddit} because of {str(e).split(':')[0]}, {'Removing subreddit from config' if config.get_key('auto_remove') is True else ''}"
+            return f"Failed to post to {subreddit} because of {str(e).split(':')[0]}, {'Removing subreddit from config' if config.get_key('auto_remove') is True else ''}", True
         except prawcore.exceptions.RequestException:
-            return "Connection Error, check your internet connection"
+            return "Connection Error, check your internet connection", False
 
     def get_flairs(self, config, subreddit):
         """Gets flairs from subreddit"""
