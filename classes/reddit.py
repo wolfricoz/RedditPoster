@@ -51,7 +51,7 @@ class Reddit:
             return 1
 
         refresh_token = reddit.auth.authorize(params["code"])
-        send_message(client, f"Refresh token: {refresh_token}. You should NEVER share this code with anyone.\n\nyou can close this page now.")
+        send_message(client, f"Succesfully received refresh token. You can close this window now. \n\n This is a one time setup, you will not need to do this again unless you remove the refresh token from your reddit profile..")
         return refresh_token
 
     def authorize(self, config):
@@ -93,6 +93,10 @@ class Reddit:
             return ["Please connect to your account first"]
         except prawcore.exceptions.NotFound:
             return ["Subreddit not found"]
+        except prawcore.exceptions.Forbidden:
+            return ["Forbidden"]
+        except Exception as e:
+            return [str(e)]
 
 def receive_connection():
     """Wait for and then return a connected socket..

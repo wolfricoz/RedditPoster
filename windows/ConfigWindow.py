@@ -15,52 +15,55 @@ class ConfigWindow(tk.Toplevel):
         self.config(width=300, height=300)
         self.focus()
         self.grab_set()
+        self.resizable(False, False)
 
         self.client_id_label = tk.Label(self, text="Client ID")
-        self.client_id_label.grid(row=0, column=0)
+        self.client_id_label.grid(row=0, column=0, pady=2, padx=5, sticky="nsew")
         self.client_id_input = tk.Entry(self, width=30)
-        self.client_id_input.grid(row=0, column=1)
+        self.client_id_input.grid(row=0, column=1, pady=2, padx=5, sticky="nsew")
         self.client_id_input.insert(0, self.appconfig.get_key("client_id"))
 
         self.client_secret_label = tk.Label(self, text="Client Secret")
-        self.client_secret_label.grid(row=1, column=0)
+        self.client_secret_label.grid(row=1, column=0, pady=2, padx=5, sticky="nsew")
         self.client_secret_input = tk.Entry(self, width=30)
-        self.client_secret_input.grid(row=1, column=1)
+        self.client_secret_input.grid(row=1, column=1, pady=2, padx=5, sticky="nsew")
         self.client_secret_input.insert(0, self.appconfig.get_key("client_secret"))
 
         self.user_agent_label = tk.Label(self, text="User Agent")
-        self.user_agent_label.grid(row=2, column=0)
+        self.user_agent_label.grid(row=2, column=0, pady=2, padx=5, sticky="nsew")
         self.user_agent_input = tk.Entry(self, width=30)
-        self.user_agent_input.grid(row=2, column=1)
+        self.user_agent_input.grid(row=2, column=1, pady=2, padx=5, sticky="nsew")
         self.user_agent_input.insert(0, self.appconfig.get_key("user_agent"))
 
         self.refresh_token_label = tk.Label(self, text="Refresh Token")
-        self.refresh_token_label.grid(row=3, column=0)
+        self.refresh_token_label.grid(row=3, column=0, pady=2, padx=5, sticky="nsew")
         self.fr = self.appconfig.get_key("refresh_token")
         self.frbool = bool(self.fr)
         self.text = 'Yes' if self.frbool is True else 'No, click connect to connect'
         self.refresh_token_input = tk.Label(self, text=self.get_refresh_token_status())
-        self.refresh_token_input.grid(row=3, column=1)
+        self.refresh_token_input.grid(row=3, column=1, pady=2, padx=5, sticky="nsew")
 
         self.interval_label = tk.Label(self, text="Interval (seconds)")
-        self.interval_label.grid(row=4, column=0)
+        self.interval_label.grid(row=4, column=0, pady=2, padx=5, sticky="nsew")
         self.interval_input = tk.Entry(self, validate="key", validatecommand=(self.register(self.only_numeric_input), '%P'))
         self.interval_input.insert(0, self.appconfig.get_key("interval"))
-        self.interval_input.grid(row=4, column=1)
+        self.interval_input.grid(row=4, column=1, pady=2, padx=5, sticky="nsew")
 
         self.auto_remove = tk.Label(self, text="Auto remove on fail?")
-        self.auto_remove.grid(row=5, column=0)
+        self.auto_remove.grid(row=5, column=0, pady=2, padx=5, sticky="nsew")
         self.auto_remove_toggle = tk.Checkbutton(
                 self,
-                text="Auto remove on fail?",
                 command=self.checkbox_auto_remove
         )
-        self.auto_remove_toggle.grid(row=5, column=1)
+        self.auto_remove_toggle.grid(row=5, column=1, pady=2, padx=5, sticky="nsew")
+        if self.appconfig.config["auto_remove"] is True:
+            self.auto_remove_toggle.toggle()
+
 
         self.save_button = tk.Button(self, text="Save & Close", command=self.on_save_button_click)
-        self.save_button.grid(row=6, column=1)
+        self.save_button.grid(row=6, column=1, pady=2, padx=5, sticky="nsew")
         self.connect_button = tk.Button(self, text="Connect", command=self.on_connect_button_click)
-        self.connect_button.grid(row=6, column=0)
+        self.connect_button.grid(row=6, column=0, pady=2, padx=5, sticky="nsew")
 
     def only_numeric_input(self, P):
         """checks if entry's value is an integer or empty and returns an appropriate boolean"""

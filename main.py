@@ -1,4 +1,3 @@
-import asyncio
 import os.path
 import queue
 import threading
@@ -35,14 +34,22 @@ class MainWindow:
 
         self.frame = tk.Frame(self.master)
 
+        # Create the menu
+        self.m = Menu(self.master, tearoff=0)
+        self.m.add_command(label="edit", command=self.open_RedditWindow)
+        self.m.add_command(label="delete", command=self.on_remove_button_click)
+
         # Create the widgets
 
         self.reddit_entry = tk.Entry(self.frame)
         self.reddit_add_button = tk.Button(self.frame, text="Add subreddit", command=self.on_add_button_click)
+        self.subreddits_title = tk.Label(self.frame, text="Subreddits")
         self.reddit_list = tk.Listbox(self.frame)
         self.reddit_remove_button = tk.Button(self.frame, text="Remove subreddit", command=self.on_remove_button_click)
         self.title_input = tk.Entry(self.frame)
-        self.body_input = tk.Text(self.frame)
+        self.title_title = tk.Label(self.frame, text="Title")
+        self.body_title = tk.Label(self.frame, text="Body")
+        self.body_input = tk.Text(self.frame, wrap=WORD)
         self.scrollbar = tk.Scrollbar(self.frame, command=self.body_input.yview, orient=VERTICAL, width=20)
         self.body_input['yscrollcommand'] = self.scrollbar.set
 
@@ -51,17 +58,23 @@ class MainWindow:
         self.help_button = tk.Button(self.frame, text="Help", command=lambda: webbrowser.open("https://wolfricoz.github.io/redditposterdocs/"))
 
         # Place the widgets
-        self.reddit_entry.grid(row=0, column=0, padx=(10, 0), pady=10, sticky='nsew')
-        self.reddit_add_button.grid(row=0, column=1, padx=(1, 10), pady=10, sticky='nsew')
-        self.reddit_list.grid(row=1, column=0, rowspan=3, columnspan=2, padx=10, sticky='nsew')
-        self.reddit_remove_button.grid(row=4, column=0, columnspan=2, padx=10, pady=(5, 10), sticky='nsew')
-
-        self.title_input.grid(row=0, column=2, columnspan=3, padx=(10, 0), pady=10, sticky='nsew')
-        self.body_input.grid(row=1, column=2, rowspan=3, columnspan=3, padx=(10, 0), sticky='nsew')
-        self.scrollbar.grid(row=1, column=5, rowspan=3, sticky='nsew')
-        self.help_button.grid(row=4, column=2, padx=10, pady=(5, 10), sticky='nsew')
-        self.config_button.grid(row=4, column=3, padx=10, pady=(5, 10), sticky='nsew')
-        self.post_button.grid(row=4, column=4, padx=10, pady=(5, 10), sticky='nsew')
+        # listbox
+        self.reddit_entry.grid(row=1, column=0, padx=(10, 0), sticky='nsew')
+        self.subreddits_title.grid(row=2, column=0, columnspan=2, pady=2, sticky='nsew')
+        self.reddit_list.grid(row=3, column=0, rowspan=3, columnspan=2, padx=10, sticky='nsew')
+        # Title
+        self.title_title.grid(row=0, column=2, columnspan=3, sticky='nsew')
+        self.title_input.grid(row=1, column=2, columnspan=3, padx=(10, 0), sticky='nsew')
+        # Body
+        self.body_title.grid(row=2, column=2, columnspan=3, pady=2, sticky='nsew')
+        self.body_input.grid(row=3, column=2, rowspan=3, columnspan=3, padx=(10, 0), sticky='nsew')
+        self.scrollbar.grid(row=3, column=5, rowspan=3, sticky='nsew')
+        # Buttons
+        self.reddit_add_button.grid(row=1, column=1, padx=(1, 10), sticky='nsew')
+        self.reddit_remove_button.grid(row=6, column=0, columnspan=2, padx=10, pady=(5, 10), sticky='nsew')
+        self.help_button.grid(row=6, column=2, padx=10, pady=(5, 10), sticky='nsew')
+        self.config_button.grid(row=6, column=3, padx=10, pady=(5, 10), sticky='nsew')
+        self.post_button.grid(row=6, column=4, padx=10, pady=(5, 10), sticky='nsew')
         self.frame.pack(fill=BOTH, expand=True)
         # insert the data into the appropriate widgets
         self.reddit_list.insert(END, *self.subreddits)
@@ -72,10 +85,10 @@ class MainWindow:
             self.body_input.insert(END, self.config.get_key("body"))
 
         # Configures the grid sizes if the window is resized
-        rows = 5
+        rows = 6
         columns = 6
         for i in range(rows):
-            if i in [0, 4]:
+            if i in [0,1,2 , 4]:
                 self.frame.grid_rowconfigure(i, weight=0)
                 continue
             self.frame.grid_rowconfigure(i, weight=1)
@@ -88,9 +101,8 @@ class MainWindow:
         self.save_post()
         self.listen_for_result()
         self.reddit_list.bind("<Double-Button-1>", lambda x: RedditWindow(self.config, self.reddit_list.get(self.reddit_list.curselection()), self.reddit_list))
+        self.reddit_list.bind("<Button-3>", self.right_click)
         self.reddit_entry.bind("<Return>", lambda x: self.on_add_button_click())
-
-
 
     def save_post(self):
         """Saves the post to a file"""
@@ -142,12 +154,10 @@ class MainWindow:
 
         self.window.show_close_button()
         self.update_list()
+
     def create_queue(self):
         for subreddit in self.config.get_subreddits():
             time.sleep(self.config.get_key("interval"))
-            # window.add_log(f"Posting to {subreddit}")
-            # wait = 6000
-            # self.master.after(wait, self.create_post(subreddit, window))
             self.thread_queue.put(threading.Thread(target=self.create_post, args=(subreddit, self.window)).start())
 
     def create_post(self, subreddit, window: PostWindow):
@@ -173,6 +183,15 @@ class MainWindow:
         except queue.Empty:
             self.master.after(10000, self.listen_for_result)
 
+    def right_click(self, event):
+        self.reddit_list.selection_clear(0, tk.END)
+        self.reddit_list.selection_set(self.reddit_list.nearest(event.y))
+        self.reddit_list.activate(self.reddit_list.nearest(event.y))
+        self.m.post(event.x_root, event.y_root)
+
+
+    def open_RedditWindow(self):
+        self.reddit_window = RedditWindow(self.config, self.reddit_list.get(self.reddit_list.curselection()), self.reddit_list)
 
 if __name__ == "__main__":
     root = tk.Tk()
