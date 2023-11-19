@@ -9,7 +9,9 @@ class Config:
             self.config = self.load_config()
             self.config = self.update_config()
             return
+
         self.create_config()
+        self.retry = 0
         self.config = self.load_config()
 
     def get_key(self, key: str):
@@ -18,15 +20,28 @@ class Config:
 
     def create_config(self):
         """Creates a config file with default values"""
-        config_file_split = self.config_file.split("/")
-        if len(config_file_split) > 1 and os.path.exists(config_file_split[0]) is False:
-            os.mkdir(config_file_split[0])
-
-        config = {
-            "subreddits": {},
-        }
-        with open(self.config_file, 'w') as f:
-            json.dump(config, f, indent=2)
+        directory = self.config_file.split("/")[0]
+        if os.path.exists(self.config_file) is True:
+            return
+        if os.path.isdir(directory) is False and len(self.config_file.split("/")) > 1:
+            print("Creating directory")
+            os.mkdir(directory)
+        with open(self.config_file, 'w+') as f:
+            data = {
+                "subreddits"   : {},
+                "title"        : "",
+                "body"         : "",
+                "client_id"    : "",
+                "client_secret": "",
+                "user_agent"   : "",
+                "redirect_uri" : "http://localhost:8080",
+                "refresh_token": "",
+                "auto_remove"  : False,
+                "interval"     : 0
+            }
+            json.dump(data, f, indent=2)
+            print("Created config file")
+        # self.update_config()
 
     def update_config(self):
         """Updates the config file with the current values"""
@@ -48,9 +63,18 @@ class Config:
 
     def load_config(self):
         """Loads the config file"""
-        with open(self.config_file) as f:
-            config = json.load(f)
-        return config
+        try:
+            with open(self.config_file) as f:
+                config = json.load(f)
+            return config
+        except json.decoder.JSONDecodeError:
+            if self.retry > 10:
+                print("Failed to load config file")
+                return
+            self.create_config()
+            self.load_config()
+            self.retry += 1
+
 
     def add_subreddit(self, subreddit: str):
         """Adds a subreddit to the config file"""
