@@ -55,7 +55,7 @@ class MainWindow:
 
         self.post_button = tk.Button(self.frame, text="Post", command=self.on_post_button_click)
         self.config_button = tk.Button(self.frame, text="Config", command=self.on_config_button_click)
-        self.help_button = tk.Button(self.frame, text="Help", command=lambda: webbrowser.open("https://wolfricoz.github.io/redditposterdocs/"))
+        self.help_button = tk.Button(self.frame, text="Help", command=lambda: webbrowser.open("https://wolfricoz.github.io/RedditPoster/"))
 
         # Place the widgets
         # listbox
