@@ -1,3 +1,4 @@
+import os
 import random
 import socket
 import sys
@@ -51,7 +52,7 @@ class Reddit:
             return 1
 
         refresh_token = reddit.auth.authorize(params["code"])
-        send_message(client, f"Succesfully received refresh token. You can close this window now. \n\n This is a one time setup, you will not need to do this again unless you remove the refresh token from your reddit profile..")
+        send_message(client, f"Refresh token: {refresh_token}. You should NEVER share this code with anyone.\n\nyou can close this page now.")
         return refresh_token
 
     def authorize(self, config):
@@ -104,13 +105,19 @@ def receive_connection():
     Opens a TCP connection on port 8080, and waits for a single client.
 
     """
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind(("localhost", 8080))
-    server.listen(1)
-    client = server.accept()[0]
-    server.close()
-    return client
+    try:
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server.bind(("localhost", 8080))
+        server.listen(1)
+        client = server.accept()[0]
+        server.close()
+        return client
+    except Exception as e:
+        if os.path.exists("logs") is False:
+            os.mkdir("logs")
+        with open("logs/error.txt", 'a') as f:
+            f.write(str(e))
 
 
 def send_message(client, message):
