@@ -8,52 +8,60 @@ import prawcore.exceptions
 from praw.exceptions import PRAWException
 import praw
 
+sys.stdout = open(os.devnull, 'w')
+sys.stderr = open(os.devnull, 'w')
 
 class Reddit:
     def __init__(self):
         self.reddit: praw.reddit
 
     def get_refresh_token(self, config):
+        try:
+            client_id = config.get_key("client_id")
+            client_secret = config.get_key("client_secret")
+            commaScopes = "all"
 
-        client_id = config.get_key("client_id")
-        client_secret = config.get_key("client_secret")
-        commaScopes = "all"
+            if commaScopes.lower() == "all":
+                scopes = ["*"]
+            else:
+                scopes = commaScopes.strip().split(",")
 
-        if commaScopes.lower() == "all":
-            scopes = ["*"]
-        else:
-            scopes = commaScopes.strip().split(",")
-
-        reddit = praw.Reddit(
-                client_id=client_id.strip(),
-                client_secret=client_secret.strip(),
-                redirect_uri="http://localhost:8080",
-                user_agent="praw_refresh_token_example",
-        )
-        state = str(random.randint(0, 65000))
-        url = reddit.auth.url(scopes, state, "permanent")
-        page = webbrowser.open(url, new=0, autoraise=True)
-        sys.stdout.flush()
-        client = receive_connection()
-        data = client.recv(1024).decode("utf-8")
-        param_tokens = data.split(" ", 2)[1].split("?", 1)[1].split("&")
-        params = {
-            key: value for (key, value) in [token.split("=") for token in param_tokens]
-        }
-
-        if state != params["state"]:
-            send_message(
-                    client,
-                    f"State mismatch. Expected: {state} Received: {params['state']}",
+            reddit = praw.Reddit(
+                    client_id=client_id.strip(),
+                    client_secret=client_secret.strip(),
+                    redirect_uri="http://localhost:8080",
+                    user_agent="praw_refresh_token_example",
             )
-            return 1
-        elif "error" in params:
-            send_message(client, params["error"])
-            return 1
+            state = str(random.randint(0, 65000))
+            url = reddit.auth.url(scopes, state, "permanent")
+            page = webbrowser.open(url, new=0, autoraise=True)
+            sys.stdout.flush()
+            client = receive_connection()
+            data = client.recv(1024).decode("utf-8")
+            param_tokens = data.split(" ", 2)[1].split("?", 1)[1].split("&")
+            params = {
+                key: value for (key, value) in [token.split("=") for token in param_tokens]
+            }
 
-        refresh_token = reddit.auth.authorize(params["code"])
-        send_message(client, f"Refresh token: {refresh_token}. You should NEVER share this code with anyone.\n\nyou can close this page now.")
-        return refresh_token
+            if state != params["state"]:
+                send_message(
+                        client,
+                        f"State mismatch. Expected: {state} Received: {params['state']}",
+                )
+                return 1
+            elif "error" in params:
+                send_message(client, params["error"])
+                return 1
+
+            refresh_token = reddit.auth.authorize(params["code"])
+            send_message(client, f"Refresh token: {refresh_token}. You should NEVER share this code with anyone.\n\nyou can close this page now.")
+            return refresh_token
+        except Exception as e:
+            print(e)
+            if os.path.exists("logs") is False:
+                os.mkdir("logs")
+            with open("logs/error.txt", 'a') as f:
+                f.write(str(e))
 
     def authorize(self, config):
         reddit = praw.Reddit(client_id=config.get_key("client_id"),
@@ -114,9 +122,10 @@ def receive_connection():
         server.close()
         return client
     except Exception as e:
+        print(e)
         if os.path.exists("logs") is False:
             os.mkdir("logs")
-        with open("logs/error.txt", 'a') as f:
+        with open("logs/weberror.txt", 'a') as f:
             f.write(str(e))
 
 

@@ -28,7 +28,7 @@ class MainWindow:
         self.subreddits = self.config.get_subreddits()
         # Settings of the main window
         self.master = master
-        self.master.title("Main Window")
+        self.master.title("Reddit Poster 1.0")
         # self.master.resizable(False, False)
         self.thread_queue = queue.Queue()
 
