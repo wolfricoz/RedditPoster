@@ -157,13 +157,18 @@ class MainWindow:
 
     def create_queue(self):
         for subreddit in self.config.get_subreddits():
+            try:
+                if not self.window.winfo_exists():
+                    return
+            except:
+                self.write_to_log(f"Post to {subreddit} cancelled")
+                return
             time.sleep(self.config.get_key("interval"))
             self.thread_queue.put(threading.Thread(target=self.create_post, args=(subreddit, self.window)).start())
 
     def create_post(self, subreddit, window: PostWindow):
         try:
             if not self.window.winfo_exists():
-                print("cancelling")
                 return
         except:
             self.write_to_log(f"Post to {subreddit} cancelled")
